@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي الكيمياء: الأحماض والقواعد | الصف الثاني عشر - الكويت</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.js للمؤثرات الصوتية التفاعلية بدون روابط خارجية -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    <!-- Google Fonts: Tajawal & Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --acid-color: #ef4444;
+            --acid-glow: rgba(239, 68, 68, 0.4);
+            --base-color: #3b82f6;
+            --base-glow: rgba(59, 130, 246, 0.4);
+            --neutral-color: #10b981;
+        }
+
+        body {
+            font-family: 'Tajawal', 'Cairo', sans-serif;
+            background: radial-gradient(circle at top right, #0f172a, #1e1b4b, #090d16);
+            color: #f8fafc;
+            min-height: 100vh;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* تنسيق الصيغ الكيميائية من اليسار لليمين دائماً */
+        .chem-formula {
+            direction: ltr;
+            display: inline-block;
+            unicode-bidi: isolate;
+            font-family: 'Cairo', sans-serif;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        /* تأثيرات الزجاج والنيون */
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .acid-btn {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            box-shadow: 0 4px 15px var(--acid-glow);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .acid-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(239, 68, 68, 0.6);
+        }
+        .acid-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .base-btn {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            box-shadow: 0 4px 15px var(--base-glow);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .base-btn:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+        }
+        .base-btn:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        /* حركات الفقاعات في الخلفية */
+        @keyframes floatBubble {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            20% { opacity: 0.4; }
+            80% { opacity: 0.4; }
+            100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+        }
+        .bubble {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: floatBubble linear infinite;
+        }
+
+        /* حركة السائل داخل الدورق */
+        @keyframes liquidWave {
+            0%, 100% { transform: rotate(-1.5deg) translateY(0px); }
+            50% { transform: rotate(1.5deg) translateY(-3px); }
+        }
+        .flask-liquid {
+            transition: fill 0.8s ease, background-color 0.8s ease;
+            transform-origin: center bottom;
+            animation: liquidWave 3s ease-in-out infinite;
+        }
+
+        /* حركة اهتزاز عند الخطأ */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* حركة نبض عند الإجابة الصحيحة */
+        @keyframes popSuccess {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .animate-pop {
+            animation: popSuccess 0.35s ease-out;
+        }
+
+        /* شريط مقياس الأس الهيدروجيني pH */
+        .ph-gradient {
+            background: linear-gradient(to left, 
+                #ef4444 0%,   /* pH 0 */
+                #f97316 14%,  /* pH 2 */
+                #eab308 28%,  /* pH 4 */
+                #84cc16 42%,  /* pH 6 */
+                #10b981 50%,  /* pH 7 - متعادل */
+                #06b6d4 60%,  /* pH 8.5 */
+                #3b82f6 75%,  /* pH 10.5 */
+                #6366f1 88%,  /* pH 12 */
+                #7e22ce 100%  /* pH 14 */
+            );
+        }
+
+        /* تخصيص شريط التمرير */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(99, 102, 241, 0.5);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="relative flex flex-col justify-between">
+
+    <!-- حاوية فقاعات المختبر المتحركة في الخلفية -->
+    <div id="bubbles-container" class="fixed inset-0 overflow-hidden pointer-events-none z-0"></div>
+
+    <!-- الشريط العلوي (Header) -->
+    <header class="relative z-10 glass-panel border-b border-slate-700/60 px-4 py-3 sm:px-8">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-500 via-purple-600 to-blue-500 flex items-center justify-center shadow-lg">
+                    <!-- أيقونة دورق مختبر SVG -->
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold bg-clip-text text-transparent bg-gradient-to-l from-rose-400 via-indigo-300 to-blue-400">
+                        تحدي الكيمياء: الأحماض والقواعد
+                    </h1>
+                    <p class="text-xs text-slate-400">منهج الصف الثاني عشر العلمي • دولة الكويت 🇰🇼</p>
+                </div>
+            </div>
+
+            <!-- لوحة الإحصائيات أثناء اللعب -->
+            <div id="hud-stats" class="hidden flex items-center gap-2 sm:gap-4 text-sm">
+                <div class="bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                    <span class="text-amber-400">⭐</span>
+                    <span class="text-slate-400 hidden sm:inline">النقاط:</span>
+                    <span id="score-display" class="font-bold text-amber-300 text-base">0</span>
+                </div>
+                <div class="bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-1.5" title="سلسلة الإجابات الصحيحة المتتالية">
+                    <span class="text-orange-500">🔥</span>
+                    <span id="streak-display" class="font-bold text-orange-400 text-base">0</span>
+                </div>
+                <button id="sound-toggle" onclick="toggleSound()" class="p-2 rounded-xl bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-300 transition" title="تفعيل/كتم الصوت">
+                    🔊
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- المحتوى الرئيسي -->
+    <main class="relative z-10 flex-grow flex items-center justify-center p-4 sm:p-6">
+        <div class="w-full max-w-4xl">
+
+            <!-- ================= 1. شاشة البداية الترحيبية ================= -->
+            <section id="screen-start" class="glass-panel rounded-3xl p-6 sm:p-10 text-center space-y-6 transition-all duration-300">
+                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-sm font-medium">
+                    <span>🧪 الوحدة الأولى: الأحماض والقواعد</span>
+                </div>
+
+                <h2 class="text-3xl sm:text-5xl font-extrabold leading-tight">
+                    مختبر المقارنة بين <span class="text-rose-400">الأحماض</span> و <span class="text-blue-400">القواعد</span>
+                </h2>
+
+                <p class="text-slate-300 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+                    اختبر معلوماتك الكيميائية في نظريات أرهينيوس وبرونستد-لوري ولويس، وتفاعلات الكواشف، وحسابات الأس الهيدروجيني <span class="chem-formula text-emerald-300">pH</span> ضمن ثلاث جولات تفاعلية شيقة!
+                </p>
+
+                <!-- إدخال اسم الطالب -->
+                <div class="max-w-md mx-auto">
+                    <label for="player-name" class="block text-right text-sm text-slate-400 mb-1.5 mr-1">اسم الباحث الكيميائي (اختياري):</label>
+                    <input type="text" id="player-name" placeholder="أدخل اسمك هنا (مثال: عبدالله الكندري)" 
+                        class="w-full px-4 py-3 rounded-xl bg-slate-900/80 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition text-center sm:text-right">
+                </div>
+
+                <!-- بطاقات المراحل الثلاث -->
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-right pt-2">
+                    <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4">
+                        <div class="text-2xl mb-2">⚡</div>
+                        <h3 class="font-bold text-rose-300 mb-1">المرحلة 1: الفرز السريع</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">صنّف الصيغ الكيميائية، التعريفات، والخصائص الفيزيائية بسرعة قبل انتهاء الوقت.</p>
+                    </div>
+                    <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4">
+                        <div class="text-2xl mb-2">🧪</div>
+                        <h3 class="font-bold text-purple-300 mb-1">المرحلة 2: المختبر والنظريات</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">تجارب الكواشف الملونة، الأزواج المترافقة لبرونستد-لوري، وأزواج إلكترونات لويس.</p>
+                    </div>
+                    <div class="bg-slate-800/60 border border-slate-700/80 rounded-2xl p-4">
+                        <div class="text-2xl mb-2">📊</div>
+                        <h3 class="font-bold text-blue-300 mb-1">المرحلة 3: مقياس pH والتأين</h3>
+                        <p class="text-xs text-slate-400 leading-relaxed">حدّد موقع المحاليل على مقياس <span class="chem-formula">pH</span> واحسب تراكيز <span class="chem-formula">[H₃O⁺]</span> و <span class="chem-formula">[OH⁻]</span>.</p>
+                    </div>
+                </div>
+
+                <!-- أزرار البدء والمراجعة -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                    <button onclick="startGame()" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white font-bold text-lg shadow-lg shadow-emerald-500/30 transform hover:-translate-y-0.5 transition flex items-center justify-center gap-2">
+                        <span>ابدأ التحدي الآن</span>
+                        <span>🚀</span>
+                    </button>
+                    <button onclick="toggleModal('study-modal', true)" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold text-base transition flex items-center justify-center gap-2">
+                        <span>📖 ملخص المراجعة السريع</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- ================= 2. شاشة انتقال بين المراحل ================= -->
+            <section id="screen-transition" class="hidden glass-panel rounded-3xl p-8 text-center space-y-6 max-w-xl mx-auto">
+                <div id="trans-badge" class="inline-block px-4 py-1 rounded-full bg-purple-500/20 border border-purple-400/40 text-purple-300 text-sm font-bold">
+                    المرحلة القادمة
+                </div>
+                <div id="trans-icon" class="text-6xl my-2">🧪</div>
+                <h2 id="trans-title" class="text-3xl font-extrabold text-white">عنوان المرحلة</h2>
+                <p id="trans-desc" class="text-slate-300 leading-relaxed">وصف المرحلة وتعليمات اللعب.</p>
+                <div class="bg-slate-900/70 rounded-2xl p-4 border border-slate-700/80 text-sm text-amber-300">
+                    💡 <span id="trans-tip">تلميح علمي سريع</span>
+                </div>
+                <button onclick="beginCurrentStage()" class="w-full py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-lg shadow-lg transition">
+                    أنا مستعد، لنبدأ! ⚡
+                </button>
+            </section>
+
+            <!-- ================= 3. شاشة اللعب الرئيسية ================= -->
+            <section id="screen-game" class="hidden space-y-4">
+                
+                <!-- شريط التقدم ومؤشر المرحلة -->
+                <div class="glass-panel rounded-2xl p-4 flex flex-col gap-3">
+                    <div class="flex items-center justify-between text-sm">
+                        <span id="stage-label" class="font-bold text-indigo-300 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping"></span>
+                            المرحلة 1: الفرز السريع
+                        </span>
+                        <span id="question-counter" class="text-slate-400 font-semibold">السؤال 1 من 8</span>
+                    </div>
+                    <!-- شريط التقدم -->
+                    <div class="w-full h-2.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="progress-bar" class="h-full bg-gradient-to-l from-rose-500 via-purple-500 to-blue-500 transition-all duration-500" style="width: 10%"></div>
+                    </div>
+                    <!-- مؤقت المرحلة الأولى -->
+                    <div id="timer-container" class="hidden flex items-center gap-2">
+                        <span class="text-xs text-slate-400">الوقت:</span>
+                        <div class="flex-grow h-2 bg-slate-800 rounded-full overflow-hidden">
+                            <div id="timer-bar" class="h-full bg-amber-400 transition-all duration-100" style="width: 100%"></div>
+                        </div>
+                        <span id="timer-text" class="text-xs font-bold text-amber-300 w-8 text-left">12s</span>
+                    </div>
+                </div>
+
+                <!-- منطقة اللعب الديناميكية -->
+                <div id="gameplay-card" class="glass-panel rounded-3xl p-6 sm:p-8 min-h-[360px] flex flex-col justify-between relative overflow-hidden">
+                    
+                    <!-- محتوى المرحلة 1: الفرز السريع -->
+                    <div id="stage1-ui" class="hidden flex-col items-center justify-between h-full space-y-6 my-auto">
+                        <div class="text-center space-y-2">
+                            <span id="s1-category" class="px-3 py-1 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300">تصنيف الصيغ الكيميائية</span>
+                            <p class="text-sm text-slate-400">هل البطاقة التالية تمثل حمضاً أم قاعدة؟ (يمكنك استخدام الأسهم يمين/يسار أيضاً)</p>
+                        </div>
+
+                        <!-- البطاقة المركزيّة -->
+                        <div id="s1-card" class="w-full max-w-md bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-slate-600 rounded-3xl p-8 text-center shadow-2xl transform transition-all duration-300">
+                            <div id="s1-item-text" class="text-2xl sm:text-3xl font-extrabold text-white leading-relaxed">
+                                <span class="chem-formula">HCl</span>
+                            </div>
+                            <div id="s1-item-sub" class="text-sm text-slate-400 mt-2">حمض الهيدروكلوريك</div>
+                        </div>
+
+                        <!-- أزرار الاختيار (حمض / قاعدة) -->
+                        <div class="grid grid-cols-2 gap-4 w-full max-w-lg pt-2">
+                            <button id="btn-choose-acid" onclick="handleStage1Answer('acid')" class="acid-btn py-4 px-6 rounded-2xl text-white font-extrabold text-xl flex flex-col items-center justify-center gap-1 border border-rose-400/30">
+                                <span class="flex items-center gap-2">🔴 حمض (Acid)</span>
+                                <span class="text-xs font-normal text-rose-200 opacity-80">مانح H⁺ / يحمّر تباع الشمس</span>
+                            </button>
+                            <button id="btn-choose-base" onclick="handleStage1Answer('base')" class="base-btn py-4 px-6 rounded-2xl text-white font-extrabold text-xl flex flex-col items-center justify-center gap-1 border border-blue-400/30">
+                                <span class="flex items-center gap-2">🔵 قاعدة (Base)</span>
+                                <span class="text-xs font-normal text-blue-200 opacity-80">مستقبل H⁺ / يزرّق تباع الشمس</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- محتوى المرحلة 2: المختبر التفاعلي والنظريات -->
+                    <div id="stage2-ui" class="hidden space-y-6">
+                        <div class="flex flex-col md:flex-row items-center gap-6">
+                            <!-- رسمة دورق المختبر التفاعلي SVG -->
+                            <div id="lab-visual-box" class="w-full md:w-1/3 flex flex-col items-center justify-center bg-slate-900/60 rounded-2xl p-4 border border-slate-700/70">
+                                <svg viewBox="0 0 140 160" class="w-32 h-36 drop-shadow-lg">
+                                    <!-- عنق الدورق -->
+                                    <rect x="52" y="10" width="36" height="45" fill="rgba(255,255,255,0.08)" stroke="#94a3b8" stroke-width="2.5"/>
+                                    <ellipse cx="70" cy="10" rx="20" ry="4" fill="none" stroke="#cbd5e1" stroke-width="2.5"/>
+                                    <!-- جسم الدورق المخروطي -->
+                                    <path d="M52 55 L20 135 Q16 148 30 148 L110 148 Q124 148 120 135 L88 55 Z" fill="rgba(255,255,255,0.06)" stroke="#94a3b8" stroke-width="2.5"/>
+                                    <!-- السائل داخل الدورق -->
+                                    <path id="flask-liquid-path" class="flask-liquid" d="M36 98 L22 135 Q18 146 30 146 L110 146 Q122 146 118 135 L104 98 Z" fill="#ec4899" fill-opacity="0.75"/>
+                                    <!-- فقاعات داخل السائل -->
+                                    <circle cx="55" cy="125" r="3" fill="rgba(255,255,255,0.5)"/>
+                                    <circle cx="80" cy="115" r="4" fill="rgba(255,255,255,0.4)"/>
+                                    <circle cx="68" cy="135" r="2.5" fill="rgba(255,255,255,0.6)"/>
+                                </svg>
+                                <span id="flask-caption" class="text-xs text-slate-300 mt-2 text-center font-medium">محلول مجهول + كاشف</span>
+                            </div>
+
+                            <!-- نص السؤال والمعادلة -->
+                            <div class="w-full md:w-2/3 space-y-3">
+                                <span id="s2-topic" class="inline-block px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/30 text-purple-300 text-xs font-bold">
+                                    نظرية برونستد - لوري
+                                </span>
+                                <h3 id="s2-question" class="text-xl sm:text-2xl font-bold text-white leading-relaxed">
+                                    نص السؤال هنا...
+                                </h3>
+                                <div id="s2-equation-box" class="hidden bg-slate-900/90 border border-slate-700 rounded-xl p-3 text-center text-lg sm:text-xl text-amber-300">
+                                    <!-- المعادلة الكيميائية -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- خيارات المرحلة 2 -->
+                        <div id="s2-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                            <!-- تُملأ برمجياً -->
+                        </div>
+                    </div>
+
+                    <!-- محتوى المرحلة 3: مقياس الأس الهيدروجيني pH والتأين -->
+                    <div id="stage3-ui" class="hidden space-y-6">
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span id="s3-topic" class="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
+                                    مقياس الأس الهيدروجيني pH وثابت تأين الماء Kw
+                                </span>
+                                <span class="text-xs text-slate-400 chem-formula">Kw = [H₃O⁺][OH⁻] = 1.0 × 10⁻¹⁴ (25°C)</span>
+                            </div>
+                            <h3 id="s3-question" class="text-xl sm:text-2xl font-bold text-white leading-relaxed pt-1">
+                                نص سؤال المرحلة الثالثة...
+                            </h3>
+                        </div>
+
+                        <!-- مقياس pH البصري التفاعلي -->
+                        <div class="bg-slate-900/80 border border-slate-700 rounded-2xl p-4 space-y-3">
+                            <div class="flex justify-between text-xs font-bold px-1">
+                                <span class="text-rose-400">حمضي قوي (0)</span>
+                                <span class="text-emerald-400">متعادل (7)</span>
+                                <span class="text-purple-400">قاعدي قوي (14)</span>
+                            </div>
+                            <div class="relative h-6 rounded-full ph-gradient shadow-inner">
+                                <!-- مؤشر على المقياس -->
+                                <div id="ph-marker" class="absolute top-1/2 -translate-y-1/2 w-5 h-8 bg-white border-2 border-slate-900 rounded-md shadow-lg transition-all duration-500 flex items-center justify-center text-[10px] font-black text-slate-900" style="right: 50%;">
+                                    ?
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-[11px] text-slate-400 chem-formula px-1">
+                                <span>0</span><span>2</span><span>4</span><span>6</span><span class="text-emerald-400 font-bold">7</span><span>8</span><span>10</span><span>12</span><span>14</span>
+                            </div>
+                        </div>
+
+                        <!-- خيارات المرحلة 3 -->
+                        <div id="s3-options" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <!-- تُملأ برمجياً -->
+                        </div>
+                    </div>
+
+                    <!-- شريط التغذية الراجعة الفورية (Feedback Banner) -->
+                    <div id="feedback-box" class="hidden mt-6 rounded-2xl p-4 border transition-all duration-300">
+                        <div class="flex items-start gap-3">
+                            <div id="feedback-icon" class="text-2xl mt-0.5">✅</div>
+                            <div class="flex-grow space-y-1">
+                                <h4 id="feedback-title" class="font-bold text-base">إجابة صحيحة!</h4>
+                                <p id="feedback-explanation" class="text-sm leading-relaxed opacity-95">التفسير العلمي للإجابة يظهر هنا.</p>
+                            </div>
+                            <button id="next-btn" onclick="nextQuestion()" class="px-5 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 font-bold text-sm transition shrink-0">
+                                التالي ⬅️
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- ================= 4. شاشة النتائج النهائية ================= -->
+            <section id="screen-results" class="hidden glass-panel rounded-3xl p-6 sm:p-10 text-center space-y-6">
+                <div id="result-trophy" class="text-6xl sm:text-7xl animate-bounce">🏆</div>
+                
+                <div class="space-y-1">
+                    <p id="result-player-greeting" class="text-indigo-300 font-semibold text-lg">أحسنت يا بطل الكيمياء!</p>
+                    <h2 id="result-rank" class="text-3xl sm:text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-amber-300 via-yellow-200 to-amber-400">
+                        عالم كيمياء متميز
+                    </h2>
+                </div>
+
+                <!-- بطاقات الإحصائيات النهائية -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto">
+                    <div class="bg-slate-900/70 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400 mb-1">مجموع النقاط</div>
+                        <div id="final-score" class="text-2xl sm:text-3xl font-black text-amber-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/70 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400 mb-1">نسبة الدقة</div>
+                        <div id="final-accuracy" class="text-2xl sm:text-3xl font-black text-emerald-400">0%</div>
+                    </div>
+                    <div class="bg-slate-900/70 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400 mb-1">الإجابات الصحيحة</div>
+                        <div id="final-correct" class="text-2xl sm:text-3xl font-black text-blue-400">0/0</div>
+                    </div>
+                    <div class="bg-slate-900/70 border border-slate-700 rounded-2xl p-4">
+                        <div class="text-xs text-slate-400 mb-1">أعلى سلسلة 🔥</div>
+                        <div id="final-streak" class="text-2xl sm:text-3xl font-black text-orange-400">0</div>
+                    </div>
+                </div>
+
+                <!-- تحليل الأداء حسب المحاور العلمية -->
+                <div class="bg-slate-900/60 border border-slate-700/80 rounded-2xl p-5 max-w-2xl mx-auto text-right space-y-3">
+                    <h3 class="font-bold text-slate-200 flex items-center gap-2">
+                        <span>📋</span> تقرير الأداء حسب محاور منهج الصف الثاني عشر:
+                    </h3>
+                    <div id="performance-breakdown" class="space-y-2.5 text-sm">
+                        <!-- يُملأ برمجياً -->
+                    </div>
+                </div>
+
+                <!-- أزرار إعادة اللعب والمراجعة -->
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+                    <button onclick="resetAndStart()" class="w-full sm:w-auto px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold text-lg shadow-lg transition">
+                        🔄 إعادة التحدي بأسئلة جديدة
+                    </button>
+                    <button onclick="toggleModal('study-modal', true)" class="w-full sm:w-auto px-6 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 font-semibold transition">
+                        📖 مراجعة القوانين والنظريات
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- نافذة ملخص المراجعة السريع (Modal) -->
+    <div id="study-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="glass-panel rounded-3xl max-w-3xl w-full max-h-[85vh] flex flex-col border border-slate-600 shadow-2xl">
+            <div class="p-5 border-b border-slate-700 flex items-center justify-between">
+                <h3 class="text-xl font-bold text-indigo-300 flex items-center gap-2">
+                    <span>📚</span> ملخص المقارنة بين الأحماض والقواعد (ثاني عشر علمي - الكويت)
+                </h3>
+                <button onclick="toggleModal('study-modal', false)" class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-rose-500/20 hover:text-rose-400 flex items-center justify-center text-slate-400 font-bold transition">
+                    ✕
+                </button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto space-y-6 text-sm sm:text-base leading-relaxed text-slate-200">
+                <!-- 1. النظريات الثلاث -->
+                <div>
+                    <h4 class="font-bold text-amber-300 text-lg mb-2">1️⃣ تعريفات الأحماض والقواعد وفق النظريات الثلاث:</h4>
+                    <div class="overflow-x-auto rounded-xl border border-slate-700">
+                        <table class="w-full text-right border-collapse">
+                            <thead class="bg-slate-800 text-slate-300 text-xs sm:text-sm">
+                                <tr>
+                                    <th class="p-3 border-b border-slate-700">النظرية</th>
+                                    <th class="p-3 border-b border-slate-700 text-rose-300">الحمض</th>
+                                    <th class="p-3 border-b border-slate-700 text-blue-300">القاعدة</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-800 bg-slate-900/50 text-xs sm:text-sm">
+                                <tr>
+                                    <td class="p-3 font-bold text-indigo-300">أرهينيوس</td>
+                                    <td class="p-3">مادة تذوب في الماء وتنتج أيونات الهيدروجين <span class="chem-formula">H⁺</span> (أو الهيدرونيوم <span class="chem-formula">H₃O⁺</span>).</td>
+                                    <td class="p-3">مادة تذوب في الماء وتنتج أيونات الهيدروكسيد <span class="chem-formula">OH⁻</span>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-indigo-300">برونستد - لوري</td>
+                                    <td class="p-3">مادة مانحة للبروتون (<span class="chem-formula">H⁺</span>)، ويتحول بعد فقده إلى <b>قاعدة مرافقة</b>.</td>
+                                    <td class="p-3">مادة مستقبلة للبروتون (<span class="chem-formula">H⁺</span>)، وتتحول بعد اكتسابه إلى <b>حمض مرافق</b>.</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-indigo-300">لويس</td>
+                                    <td class="p-3">مادة مستقبلة لزوج أو أكثر من الإلكترونات غير الرابطة (مثل <span class="chem-formula">BF₃, AlCl₃, H⁺</span>).</td>
+                                    <td class="p-3">مادة مانحة لزوج أو أكثر من الإلكترونات غير الرابطة (مثل <span class="chem-formula">NH₃, H₂O, OH⁻</span>).</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. الكواشف والخواص -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="bg-rose-950/30 border border-rose-500/30 rounded-2xl p-4 space-y-2">
+                        <h4 class="font-bold text-rose-300">🔴 خصائص الأحماض:</h4>
+                        <ul class="list-disc list-inside space-y-1 text-xs sm:text-sm text-slate-300">
+                            <li>طعمها حمضي لاذع.</li>
+                            <li>تحوّل ورقة تباع الشمس الزرقاء إلى <b>الحمراء</b>.</li>
+                            <li>عديمة اللون مع الفينولفثالين، وحمراء مع الميثيل البرتقالي.</li>
+                            <li>تتفاعل مع الفلزات النشطة (مثل <span class="chem-formula">Zn, Mg</span>) وينطلق غاز <span class="chem-formula">H₂</span>.</li>
+                            <li>تتفاعل مع الكربونات/البيكربونات وينطلق غاز <span class="chem-formula">CO₂</span>.</li>
+                            <li>أحماض قوية: <span class="chem-formula">HCl, HNO₃, H₂SO₄, HBr, HI, HClO₄</span>.</li>
+                        </ul>
+                    </div>
+                    <div class="bg-blue-950/30 border border-blue-500/30 rounded-2xl p-4 space-y-2">
+                        <h4 class="font-bold text-blue-300">🔵 خصائص القواعد:</h4>
+                        <ul class="list-disc list-inside space-y-1 text-xs sm:text-sm text-slate-300">
+                            <li>طعمها مرّ وملمسها صابوني زلق.</li>
+                            <li>تحوّل ورقة تباع الشمس الحمراء إلى <b>الزرقاء</b>.</li>
+                            <li>تعطي لوناً <b>ورديّاً/بنفسجيّاً</b> مع الفينولفثالين، وأصفر مع الميثيل البرتقالي.</li>
+                            <li>قواعد قوية: <span class="chem-formula">NaOH, KOH, LiOH, Ca(OH)₂, Ba(OH)₂</span>.</li>
+                            <li>قواعد ضعيفة: الأمونيا <span class="chem-formula">NH₃</span> والأمينات.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 3. القوانين ومقياس pH -->
+                <div class="bg-slate-800/70 border border-slate-700 rounded-2xl p-4 space-y-2">
+                    <h4 class="font-bold text-emerald-300">3️⃣ مقياس <span class="chem-formula">pH</span> وثابت تأين الماء <span class="chem-formula">Kw</span> (عند <span class="chem-formula">25°C</span>):</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs sm:text-sm">
+                        <div class="bg-slate-900/80 p-2.5 rounded-xl"><span class="chem-formula text-emerald-300">Kw = [H₃O⁺] × [OH⁻] = 1.0 × 10⁻¹⁴</span></div>
+                        <div class="bg-slate-900/80 p-2.5 rounded-xl"><span class="chem-formula text-amber-300">pH = -log[H₃O⁺]  |  pH + pOH = 14</span></div>
+                        <div class="bg-slate-900/80 p-2.5 rounded-xl">محلول حمضي: <span class="chem-formula text-rose-400">pH &lt; 7</span> و <span class="chem-formula">[H₃O⁺] &gt; 10⁻⁷ M</span></div>
+                        <div class="bg-slate-900/80 p-2.5 rounded-xl">محلول قاعدي: <span class="chem-formula text-blue-400">pH &gt; 7</span> و <span class="chem-formula">[OH⁻] &gt; 10⁻⁷ M</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-700 text-center">
+                <button onclick="toggleModal('study-modal', false)" class="px-8 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition">
+                    فهمت، العودة للعبة 👍
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- تذييل الصفحة -->
+    <footer class="relative z-10 text-center py-3 text-xs text-slate-500">
+        صُمم لطلبة الصف الثاني عشر العلمي • وفق منهج وزارة التربية - دولة الكويت 🇰🇼
+    </footer>
+
+    <!-- ================= المنطق البرمجي وبنك الأسئلة الكيميائية ================= -->
+    <script>
+        // ----------------- 1. المؤثرات الصوتية باستخدام Tone.js -----------------
+        let soundEnabled = true;
+        let synth = null;
+
+        function initAudio() {
+            if (!synth && typeof Tone !== 'undefined') {
+                synth = new Tone.PolySynth(Tone.Synth).toDestination();
+                synth.volume.value = -8;
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('sound-toggle').textContent = soundEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            try {
+                initAudio();
+                if (Tone.context.state !== 'running') Tone.start();
+                const now = Tone.now();
+                if (type === 'correct') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5'], '16n', now);
+                } else if (type === 'wrong') {
+                    synth.triggerAttackRelease(['F3', 'E3'], '8n', now);
+                } else if (type === 'levelup') {
+                    synth.triggerAttackRelease(['C5', 'E5', 'G5', 'C6'], '8n', now);
+                }
+            } catch (e) {
+                // تجاهل أي خطأ صوتي في المتصفحات المقيدة
+            }
+        }
+
+        // ----------------- 2. توليد فقاعات المختبر في الخلفية -----------------
+        function createBubbles() {
+            const container = document.getElementById('bubbles-container');
+            const colors = ['rgba(239, 68, 68, 0.15)', 'rgba(59, 130, 246, 0.15)', 'rgba(168, 85, 247, 0.15)', 'rgba(16, 185, 129, 0.12)'];
+            for (let i = 0; i < 16; i++) {
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                const size = Math.random() * 45 + 15;
+                bubble.style.width = `${size}px`;
+                bubble.style.height = `${size}px`;
+                bubble.style.left = `${Math.random() * 100}%`;
+                bubble.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                bubble.style.animationDuration = `${Math.random() * 12 + 10}s`;
+                bubble.style.animationDelay = `${Math.random() * 8}s`;
+                container.appendChild(bubble);
+            }
+        }
+
+        // ----------------- 3. بنك الأسئلة الشامل (منهج الكويت 12 علمي) -----------------
+        
+        // بنك المرحلة الأولى: الفرز السريع (حمض مقابل قاعدة)
+        const stage1Pool = [
+            { text: '<span class="chem-formula">HCl</span>', sub: 'حمض الهيدروكلوريك (في العصارة المعدية)', type: 'acid', cat: 'صيغة كيميائية', exp: '<span class="chem-formula">HCl</span> حمض قوي يتأين كلياً في الماء منتجاً أيونات <span class="chem-formula">H₃O⁺</span>.' },
+            { text: '<span class="chem-formula">NaOH</span>', sub: 'هيدروكسيد الصوديوم (الصودا الكاوية)', type: 'base', cat: 'صيغة كيميائية', exp: '<span class="chem-formula">NaOH</span> قاعدة أرهينيوس قوية تتفكك في الماء منتجة أيونات <span class="chem-formula">OH⁻</span>.' },
+            { text: '<span class="chem-formula">CH₃COOH</span>', sub: 'حمض الأسيتيك (الخل)', type: 'acid', cat: 'صيغة كيميائية', exp: '<span class="chem-formula">CH₃COOH</span> حمض كربوكسيلي ضعيف يمنح بروتون <span class="chem-formula">H⁺</span>.' },
+            { text: '<span class="chem-formula">NH₃</span>', sub: 'غاز الأمونيا', type: 'base', cat: 'صيغة كيميائية', exp: 'الأمونيا <span class="chem-formula">NH₃</span> قاعدة برونستد-لوري (تستقبل <span class="chem-formula">H⁺</span>) وقاعدة لويس (تمنح زوج إلكترونات).' },
+            { text: '<span class="chem-formula">H₂SO₄</span>', sub: 'حمض الكبريتيك (ثنائي البروتون)', type: 'acid', cat: 'صيغة كيميائية', exp: '<span class="chem-formula">H₂SO₄</span> حمض قوي ثنائي البروتون يستخدم في بطاريات السيارات.' },
+            { text: '<span class="chem-formula">Ca(OH)₂</span>', sub: 'هيدروكسيد الكالسيوم (ماء الجير)', type: 'base', cat: 'صيغة كيميائية', exp: '<span class="chem-formula">Ca(OH)₂</span> قاعدة قوية تنتج أيونات الهيدروكسيد <span class="chem-formula">OH⁻</span>.' },
+            { text: 'مانح للبروتون (<span class="chem-formula">H⁺</span>)', sub: 'حسب نظرية برونستد - لوري', type: 'acid', cat: 'تعريف علمي', exp: 'عرّف برونستد ولوري الحمض بأنه المادة التي تمنح بروتوناً (<span class="chem-formula">H⁺</span>) لمادة أخرى.' },
+            { text: 'مانح لزوج الإلكترونات غير الرابطة', sub: 'حسب نظرية لويس', type: 'base', cat: 'تعريف علمي', exp: 'قاعدة لويس هي المادة التي تمتلك زوجاً غير رابط من الإلكترونات وتمنحه لتكوين رابطة تساهمية تناسقية.' },
+            { text: 'مستقبل لزوج الإلكترونات غير الرابطة', sub: 'حسب نظرية لويس', type: 'acid', cat: 'تعريف علمي', exp: 'حمض لويس مادة تحتوي فلكاً فارغاً وتستقبل زوج الإلكترونات (مثل <span class="chem-formula">BF₃</span> و <span class="chem-formula">AlCl₃</span>).' },
+            { text: 'ملمسه صابوني زلق وطعمه مرّ', sub: 'خواص فيزيائية مميزة', type: 'base', cat: 'خصائص فيزيائية', exp: 'المحاليل القاعدية تتميز بملمسها الصابوني الزلق وطعمها المر (مثل الصابون والمنظفات).' },
+            { text: 'يتفاعل مع <span class="chem-formula">Zn</span> ويتصاعد غاز <span class="chem-formula">H₂</span>', sub: 'تفاعل مع الفلزات النشطة', type: 'acid', cat: 'خصائص كيميائية', exp: 'تتفاعل الأحماض المخففة مع الفلزات النشطة التي تسبق الهيدروجين في السلسلة الكهروكيميائية وينطلق <span class="chem-formula">H₂</span>.' },
+            { text: 'يتفاعل مع <span class="chem-formula">NaHCO₃</span> وينطلق غاز <span class="chem-formula">CO₂</span>', sub: 'تفاعل مع البيكربونات', type: 'acid', cat: 'خصائص كيميائية', exp: 'الأحماض تتفاعل مع أملاح الكربونات والبيكربونات مسببة فوراناً لتصاعد غاز ثاني أكسيد الكربون <span class="chem-formula">CO₂</span>.' },
+            { text: 'يحوّل ورقة تباع الشمس الحمراء إلى زرقاء', sub: 'تأثير الكواشف', type: 'base', cat: 'الكواشف', exp: 'القواعد تزرّق ورقة تباع الشمس الحمراء وتُكسب الفينولفثالين لوناً وردياً.' },
+            { text: '<span class="chem-formula">BF₃</span>', sub: 'ثلاثي فلوريد البورون', type: 'acid', cat: 'أحماض وقواعد لويس', exp: 'ذرة البورون في <span class="chem-formula">BF₃</span> تمتلك 6 إلكترونات تكافؤ وفلكاً فارغاً فتستقبل زوج إلكترونات (حمض لويس).' }
+        ];
+
+        // بنك المرحلة الثانية: المختبر التفاعلي والنظريات
+        const stage2Pool = [
+            {
+                topic: 'تجارب الكواشف الكيميائية',
+                flaskColor: '#ec4899', // وردي غامق
+                flaskLabel: 'محلول مجهول + قطرات فينولفثالين',
+                question: 'عند إضافة قطرات من دليل الفينولفثالين عديم اللون إلى دورق يحتوي على محلول مجهول، تحول اللون فوراً إلى الوردي الغامق (البنفسجي). هذا يدل على أن المحلول:',
+                equation: '',
+                options: [
+                    'محلول قاعدي مثل <span class="chem-formula">NaOH</span> أو <span class="chem-formula">NH₃</span>',
+                    'محلول حمضي قوي مثل <span class="chem-formula">HCl</span>',
+                    'ماء مقطر متعادل (<span class="chem-formula">pH = 7</span>)',
+                    'محلول حمض الأسيتيك <span class="chem-formula">CH₃COOH</span>'
+                ],
+                correct: 0,
+                explanation: 'دليل الفينولفثالين يكون عديم اللون في الوسط الحمضي والمتعادل، ويتحول إلى اللون الوردي/البنفسجي في الوسط القاعدي (<span class="chem-formula">pH &gt; 8.2</span>).'
+            },
+            {
+                topic: 'نظرية برونستد - لوري (الأزواج المترافقة)',
+                flaskColor: '#6366f1',
+                flaskLabel: 'تفاعل تأين الأمونيا في الماء',
+                question: 'في التفاعل العكوس التالي، ما هما الحمض والحمض المرافق على الترتيب؟',
+                equation: '<span class="chem-formula">NH₃(aq) + H₂O(l) ⇌ NH₄⁺(aq) + OH⁻(aq)</span>',
+                options: [
+                    'الحمض: <span class="chem-formula">H₂O</span> ، والحمض المرافق: <span class="chem-formula">NH₄⁺</span>',
+                    'الحمض: <span class="chem-formula">NH₃</span> ، والحمض المرافق: <span class="chem-formula">OH⁻</span>',
+                    'الحمض: <span class="chem-formula">H₂O</span> ، والحمض المرافق: <span class="chem-formula">OH⁻</span>',
+                    'الحمض: <span class="chem-formula">NH₄⁺</span> ، والحمض المرافق: <span class="chem-formula">NH₃</span>'
+                ],
+                correct: 0,
+                explanation: 'الماء <span class="chem-formula">H₂O</span> منح بروتوناً لـ <span class="chem-formula">NH₃</span> فهو (الحمض)، بينما <span class="chem-formula">NH₃</span> استقبل البروتون فتحول إلى (حمض مرافق) وهو <span class="chem-formula">NH₄⁺</span>.'
+            },
+            {
+                topic: 'نظرية لويس للأحماض والقواعد',
+                flaskColor: '#0ea5e9',
+                flaskLabel: 'تفاعل تكوين رابطة تناسقية',
+                question: 'في التفاعل التالي، يُصنف أيون الفضة <span class="chem-formula">Ag⁺</span> كحمض لويس لأنه:',
+                equation: '<span class="chem-formula">Ag⁺(aq) + 2NH₃(aq) → [Ag(NH₃)₂]⁺(aq)</span>',
+                options: [
+                    'يستقبل زوجين من الإلكترونات غير الرابطة من جزيئات الأمونيا',
+                    'يمنح بروتونات <span class="chem-formula">H⁺</span> في المحلول المائي',
+                    'يمنح أزواجاً من الإلكترونات غير الرابطة للأمونيا',
+                    'ينتج أيونات الهيدروكسيد <span class="chem-formula">OH⁻</span> عند ذوبانه'
+                ],
+                correct: 0,
+                explanation: 'وفق نظرية لويس، الأيونات الفلزية الموجبة مثل <span class="chem-formula">Ag⁺</span> تمتلك أفلاكاً فارغة فتستقبل أزواج الإلكترونات من القاعدة (<span class="chem-formula">NH₃</span>) لتكوين رابطة تناسقية.'
+            },
+            {
+                topic: 'المواد المترددة (الأمفوتيرية)',
+                flaskColor: '#10b981',
+                flaskLabel: 'سلوك الماء والأنيونات الهيدروجينية',
+                question: 'أيٌّ من الأنواع الكيميائية التالية يمكنه أن يسلك كحمض برونستد-لوري في تفاعل، وكقاعدة برونستد-لوري في تفاعل آخر (مادة مترددة/أمفوتيرية)؟',
+                equation: '',
+                options: [
+                    'أيون البيكربونات <span class="chem-formula">HCO₃⁻</span>',
+                    'أيون الكربونات <span class="chem-formula">CO₃²⁻</span>',
+                    'حمض النيتريك <span class="chem-formula">HNO₃</span>',
+                    'أيون الأمونيوم <span class="chem-formula">NH₄⁺</span>'
+                ],
+                correct: 0,
+                explanation: 'أيون <span class="chem-formula">HCO₃⁻</span> يمتلك بروتوناً قابلاً للفقد (فيعمل كحمض ويتحول إلى <span class="chem-formula">CO₃²⁻</span>) كما يمكنه استقبال بروتون (فيعمل كقاعدة ويتحول إلى <span class="chem-formula">H₂CO₃</span>).'
+            },
+            {
+                topic: 'التوصيل الكهربائي وقوة الإلكتروليت',
+                flaskColor: '#f59e0b',
+                flaskLabel: 'اختبار التوصيل الكهربائي للمحاليل',
+                question: 'عند اختبار التوصيل الكهربائي لمحلولين متساويين في التركيز (<span class="chem-formula">0.1 M</span>) من <span class="chem-formula">HCl</span> و <span class="chem-formula">CH₃COOH</span>، نلاحظ إضاءة المصباح بشدة في محلول <span class="chem-formula">HCl</span> وخفوتها في <span class="chem-formula">CH₃COOH</span> لأن:',
+                equation: '',
+                options: [
+                    '<span class="chem-formula">HCl</span> يتأين كلياً في الماء منتجاً تركيزاً عالياً من الأيونات',
+                    '<span class="chem-formula">CH₃COOH</span> يتأين كلياً في الماء ولا ينتج أيونات',
+                    '<span class="chem-formula">HCl</span> مركب تساهمي غير إلكتروليتي لا يتأين',
+                    'تركيز أيونات <span class="chem-formula">H₃O⁺</span> في <span class="chem-formula">CH₃COOH</span> أكبر من <span class="chem-formula">HCl</span>'
+                ],
+                correct: 0,
+                explanation: '<span class="chem-formula">HCl</span> حمض قوي (إلكتروليت قوي) يتأين بنسبة 100% تقريباً، بينما <span class="chem-formula">CH₃COOH</span> حمض ضعيف يتأين جزئياً فقط.'
+            },
+            {
+                topic: 'تأثير الكواشف (الميثيل البرتقالي)',
+                flaskColor: '#ef4444',
+                flaskLabel: 'محلول حمضي + دليل الميثيل البرتقالي',
+                question: 'أضاف طالب قطرات من دليل الميثيل البرتقالي إلى أنبوب اختبار يحتوي على حمض الكبريتيك المخفف <span class="chem-formula">H₂SO₄</span>، ما اللون المتوقع ظهورُه في الأنبوب؟',
+                equation: '',
+                options: [
+                    'اللون الأحمر',
+                    'اللون الأصفر',
+                    'اللون الأزرق',
+                    'عديم اللون'
+                ],
+                correct: 0,
+                explanation: 'دليل الميثيل البرتقالي يعطي اللون الأحمر في الوسط الحمضي (<span class="chem-formula">pH &lt; 3.1</span>) واللون الأصفر في الوسط القاعدي (<span class="chem-formula">pH &gt; 4.4</span>).'
+            },
+            {
+                topic: 'قوة الحمض وقاعدته المرافقة',
+                flaskColor: '#8b5cf6',
+                flaskLabel: 'العلاقة بين الحمض والقاعدة المرافقة',
+                question: 'إذا علمت أن حمض الهيدروكلوريك <span class="chem-formula">HCl</span> حمض قوي جداً، وحمض الهيدروفلوريك <span class="chem-formula">HF</span> حمض ضعيف، فأي العبارات التالية صحيحة؟',
+                equation: '',
+                options: [
+                    'القاعدة المرافقة <span class="chem-formula">F⁻</span> أقوى من القاعدة المرافقة <span class="chem-formula">Cl⁻</span>',
+                    'القاعدة المرافقة <span class="chem-formula">Cl⁻</span> أقوى من القاعدة المرافقة <span class="chem-formula">F⁻</span>',
+                    'كلا القاعدتين المرافقتين <span class="chem-formula">Cl⁻</span> و <span class="chem-formula">F⁻</span> قواعد قوية جداً',
+                    'الحمض الأقوى ينتج دائماً قاعدة مرافقة قوية'
+                ],
+                correct: 0,
+                explanation: 'القاعدة الأساسية في نظرية برونستد-لوري: كلما كان الحمض أقوى كانت قاعدته المرافقة أضعف؛ لذا فإن <span class="chem-formula">F⁻</span> (المرافق للحمض الضعيف <span class="chem-formula">HF</span>) أقوى من <span class="chem-formula">Cl⁻</span>.'
+            }
+        ];
+
+        // بنك المرحلة الثالثة: مقياس الأس الهيدروجيني pH والتأين والحسابات
+        const stage3Pool = [
+            {
+                topic: 'حساب الأس الهيدروجيني لحمض قوي',
+                phValue: 2,
+                question: 'ما قيمة الأس الهيدروجيني <span class="chem-formula">pH</span> لمحلول حمض النيتريك <span class="chem-formula">HNO₃</span> تركيزه <span class="chem-formula">0.01 M</span> (<span class="chem-formula">1.0 × 10⁻² M</span>) عند <span class="chem-formula">25°C</span>؟',
+                options: [
+                    '<span class="chem-formula">pH = 2</span> (محلول حمضي)',
+                    '<span class="chem-formula">pH = 12</span> (محلول قاعدي)',
+                    '<span class="chem-formula">pH = 0.01</span> (محلول حمضي)',
+                    '<span class="chem-formula">pH = 7</span> (محلول متعادل)'
+                ],
+                correct: 0,
+                explanation: 'بما أن <span class="chem-formula">HNO₃</span> حمض قوي أحادي البروتون، فإن <span class="chem-formula">[H₃O⁺] = 10⁻² M</span>، وبالتالي <span class="chem-formula">pH = -log(10⁻²) = 2</span>.'
+            },
+            {
+                topic: 'حساب الأس الهيدروجيني لقاعدة قوية',
+                phValue: 13,
+                question: 'أُذيب هيدروكسيد الصوديوم <span class="chem-formula">NaOH</span> في الماء ليصبح تركيز المحلول <span class="chem-formula">0.1 M</span> (<span class="chem-formula">1.0 × 10⁻¹ M</span>). ما قيمة <span class="chem-formula">pH</span> للمحلول عند <span class="chem-formula">25°C</span>؟',
+                options: [
+                    '<span class="chem-formula">pH = 13</span>',
+                    '<span class="chem-formula">pH = 1</span>',
+                    '<span class="chem-formula">pH = 14</span>',
+                    '<span class="chem-formula">pH = 11</span>'
+                ],
+                correct: 0,
+                explanation: '<span class="chem-formula">NaOH</span> قاعدة قوية لذا <span class="chem-formula">[OH⁻] = 10⁻¹ M</span>، ومنه <span class="chem-formula">pOH = 1</span>. وبما أن <span class="chem-formula">pH + pOH = 14</span> فإن <span class="chem-formula">pH = 14 - 1 = 13</span>.'
+            },
+            {
+                topic: 'ثابت تأين الماء Kw',
+                phValue: 9,
+                question: 'في محلول مائي عند <span class="chem-formula">25°C</span>، إذا كان تركيز أيونات الهيدرونيوم <span class="chem-formula">[H₃O⁺] = 1.0 × 10⁻⁹ M</span>، فما تركيز أيونات الهيدروكسيد <span class="chem-formula">[OH⁻]</span> وما نوع المحلول؟',
+                options: [
+                    '<span class="chem-formula">[OH⁻] = 1.0 × 10⁻⁵ M</span> (محلول قاعدي)',
+                    '<span class="chem-formula">[OH⁻] = 1.0 × 10⁻⁹ M</span> (محلول متعادل)',
+                    '<span class="chem-formula">[OH⁻] = 1.0 × 10⁻⁵ M</span> (محلول حمضي)',
+                    '<span class="chem-formula">[OH⁻] = 1.0 × 10⁻¹⁴ M</span> (محلول قاعدي)'
+                ],
+                correct: 0,
+                explanation: 'من علاقة <span class="chem-formula">Kw = [H₃O⁺][OH⁻] = 10⁻¹⁴</span> نجد أن <span class="chem-formula">[OH⁻] = 10⁻¹⁴ / 10⁻⁹ = 10⁻⁵ M</span>. وبما أن <span class="chem-formula">[OH⁻] &gt; [H₃O⁺]</span> فالمحلول قاعدي (<span class="chem-formula">pH = 9</span>).'
+            },
+            {
+                topic: 'تطبيقات مقياس الأس الهيدروجيني pH',
+                phValue: 7.4,
+                question: 'تتراوح قيمة <span class="chem-formula">pH</span> للدم البشري السليم بين <span class="chem-formula">7.35</span> و <span class="chem-formula">7.45</span>. بناءً على مقياس <span class="chem-formula">pH</span>، يُصنف الدم البشري كمحلول:',
+                options: [
+                    'قاعدي ضعيف جداً',
+                    'حمضي ضعيف جداً',
+                    'متعادل تماماً عند 25°C',
+                    'قاعدي قوي'
+                ],
+                correct: 0,
+                explanation: 'لأن قيمة <span class="chem-formula">pH</span> للدم (<span class="chem-formula">~7.4</span>) أكبر بقليل من 7، فإن الدم يعتبر محلولاً قاعدياً ضعيفاً جداً.'
+            },
+            {
+                topic: 'المقارنة بين تراكيز الأيونات',
+                phValue: 4,
+                question: 'إذا كان لديك محلولان: المحلول (A) له <span class="chem-formula">pH = 3</span>، والمحلول (B) له <span class="chem-formula">pH = 5</span>. كم مرة يزيد تركيز <span class="chem-formula">[H₃O⁺]</span> في المحلول (A) عنه في المحلول (B)؟',
+                options: [
+                    '100 مرة (<span class="chem-formula">10²</span>)',
+                    'مرتين (2)',
+                    '10 مرات (<span class="chem-formula">10¹</span>)',
+                    '1000 مرة (<span class="chem-formula">10³</span>)'
+                ],
+                correct: 0,
+                explanation: 'مقياس <span class="chem-formula">pH</span> لوغاريتمي عشري؛ كل وحدة <span class="chem-formula">pH</span> تمثل تغيراً بمقدار 10 أضعاف. الفرق وحدتان (<span class="chem-formula">5 - 3 = 2</span>)، إذن التركيز أكبر بـ <span class="chem-formula">10² = 100</span> مرة.'
+            },
+            {
+                topic: 'تأثير تخفيف الحمض على قيمة pH',
+                phValue: 5.5,
+                question: 'عند إضافة كمية من الماء المقطر إلى دورق يحتوي على حمض الهيدروكلوريك <span class="chem-formula">HCl</span> (تخفيف الحمض)، ماذا يحدث لتركيز <span class="chem-formula">[H₃O⁺]</span> وقيمة <span class="chem-formula">pH</span>؟',
+                options: [
+                    'يقل تركيز <span class="chem-formula">[H₃O⁺]</span> وتزداد قيمة <span class="chem-formula">pH</span> مقتربة من 7',
+                    'يزداد تركيز <span class="chem-formula">[H₃O⁺]</span> وتقل قيمة <span class="chem-formula">pH</span>',
+                    'يقل تركيز <span class="chem-formula">[H₃O⁺]</span> وتقل قيمة <span class="chem-formula">pH</span>',
+                    'تتجاوز قيمة <span class="chem-formula">pH</span> الرقم 7 ويصبح المحلول قاعدياً'
+                ],
+                correct: 0,
+                explanation: 'التخفيف بالماء يقلل تركيز أيونات <span class="chem-formula">[H₃O⁺]</span> فتقل الحمضية وتزداد قيمة <span class="chem-formula">pH</span> مقتربة من 7 دون أن تتجاوزها.'
+            }
+        ];
+
+        // ----------------- 4. حالة اللعبة (Game State) -----------------
+        let gameState = {
+            playerName: '',
+            currentStage: 1, // 1, 2, 3
+            stageQuestions: [],
+            currentIndex: 0,
+            score: 0,
+            streak: 0,
+            maxStreak: 0,
+            totalAnswered: 0,
+            totalCorrect: 0,
+            answeredCurrent: false,
+            timerInterval: null,
+            timeLeft: 12,
+            stageStats: {
+                1: { correct: 0, total: 6, label: 'الفرز السريع (الصيغ والخصائص)' },
+                2: { correct: 0, total: 5, label: 'المختبر (النظريات والكواشف)' },
+                3: { correct: 0, total: 5, label: 'مقياس pH وحسابات التأين' }
+            }
+        };
+
+        // دالة لخلط عناصر المصفوفة عشوائياً
+        function shuffleArray(arr) {
+            const copy = [...arr];
+            for (let i = copy.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+
+        // إظهار/إخفاء الشاشات
+        function showScreen(screenId) {
+            ['screen-start', 'screen-transition', 'screen-game', 'screen-results'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function toggleModal(modalId, show) {
+            const modal = document.getElementById(modalId);
+            if (show) modal.classList.remove('hidden');
+            else modal.classList.add('hidden');
+        }
+
+        // ----------------- 5. بدء اللعبة وإدارة المراحل -----------------
+        function startGame() {
+            const nameInput = document.getElementById('player-name').value.trim();
+            gameState.playerName = nameInput || 'بطل الكيمياء';
+            gameState.score = 0;
+            gameState.streak = 0;
+            gameState.maxStreak = 0;
+            gameState.totalAnswered = 0;
+            gameState.totalCorrect = 0;
+            gameState.stageStats[1].correct = 0;
+            gameState.stageStats[2].correct = 0;
+            gameState.stageStats[3].correct = 0;
+
+            updateHUD();
+            document.getElementById('hud-stats').classList.remove('hidden');
+            prepareStageTransition(1);
+        }
+
+        function resetAndStart() {
+            startGame();
+        }
+
+        function prepareStageTransition(stageNum) {
+            clearInterval(gameState.timerInterval);
+            gameState.currentStage = stageNum;
+            showScreen('screen-transition');
+
+            const badge = document.getElementById('trans-badge');
+            const icon = document.getElementById('trans-icon');
+            const title = document.getElementById('trans-title');
+            const desc = document.getElementById('trans-desc');
+            const tip = document.getElementById('trans-tip');
+
+            if (stageNum === 1) {
+                badge.textContent = 'المرحلة الأولى من 3';
+                icon.textContent = '⚡';
+                title.textContent = 'تحدي الفرز السريع';
+                desc.innerHTML = 'ستظهر أمامك بطاقات تحتوي على صيغ كيميائية، تعريفات أرهينيوس وبرونستد ولويس، وخصائص فيزيائية. صنّفها بسرعة إلى <b>حمض</b> أو <b>قاعدة</b>!';
+                tip.innerHTML = 'تذكّر: الأحماض تمنح بروتون <span class="chem-formula">H⁺</span> وتستقبل زوج إلكترونات، بينما القواعد تستقبل <span class="chem-formula">H⁺</span> وتمنح زوج إلكترونات.';
+                gameState.stageQuestions = shuffleArray(stage1Pool).slice(0, 6);
+            } else if (stageNum === 2) {
+                badge.textContent = 'المرحلة الثانية من 3';
+                icon.textContent = '🧪';
+                title.textContent = 'مختبر الكواشف والنظريات';
+                desc.innerHTML = 'أهلاً بك في المختبر! راقب تغير ألوان الكواشف في الدورق، وحدد الأزواج المترافقة في معادلات برونستد-لوري وأحماض وقواعد لويس.';
+                tip.innerHTML = 'الفينولفثالين يتحول إلى الوردي في الوسط القاعدي، والميثيل البرتقالي يصبح أحمر في الوسط الحمضي.';
+                gameState.stageQuestions = shuffleArray(stage2Pool).slice(0, 5);
+            } else if (stageNum === 3) {
+                badge.textContent = 'المرحلة الثالثة والأخيرة';
+                icon.textContent = '📊';
+                title.textContent = 'مقياس الأس الهيدروجيني pH والتأين';
+                desc.innerHTML = 'اختبر مهاراتك الحسابية في إيجاد <span class="chem-formula">pH</span> وتراكيز <span class="chem-formula">[H₃O⁺]</span> و <span class="chem-formula">[OH⁻]</span> باستخدام ثابت تأين الماء <span class="chem-formula">Kw</span>.';
+                tip.innerHTML = 'عند <span class="chem-formula">25°C</span>: <span class="chem-formula">pH + pOH = 14</span> ، وحاصل ضرب <span class="chem-formula">[H₃O⁺][OH⁻] = 1.0 × 10⁻¹⁴</span>.';
+                gameState.stageQuestions = shuffleArray(stage3Pool).slice(0, 5);
+            }
+        }
+
+        function beginCurrentStage() {
+            gameState.currentIndex = 0;
+            showScreen('screen-game');
+            renderQuestion();
+        }
+
+        // ----------------- 6. عرض الأسئلة لكل مرحلة -----------------
+        function renderQuestion() {
+            clearInterval(gameState.timerInterval);
+            gameState.answeredCurrent = false;
+            
+            const qIndex = gameState.currentIndex;
+            const totalQ = gameState.stageQuestions.length;
+            const currentQ = gameState.stageQuestions[qIndex];
+
+            // تحديث الشريط العلوي
+            const stageNames = {
+                1: 'المرحلة 1: الفرز السريع',
+                2: 'المرحلة 2: المختبر والنظريات',
+                3: 'المرحلة 3: مقياس pH والتأين'
+            };
+            document.getElementById('stage-label').innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-indigo-400 animate-ping"></span> ${stageNames[gameState.currentStage]}`;
+            document.getElementById('question-counter').textContent = `السؤال ${qIndex + 1} من ${totalQ}`;
+            document.getElementById('progress-bar').style.width = `${((qIndex) / totalQ) * 100}%`;
+
+            // إخفاء التغذية الراجعة وواجهات المراحل
+            document.getElementById('feedback-box').classList.add('hidden');
+            document.getElementById('stage1-ui').classList.add('hidden');
+            document.getElementById('stage2-ui').classList.add('hidden');
+            document.getElementById('stage3-ui').classList.add('hidden');
+            document.getElementById('timer-container').classList.add('hidden');
+
+            if (gameState.currentStage === 1) {
+                renderStage1(currentQ);
+            } else if (gameState.currentStage === 2) {
+                renderStage2(currentQ);
+            } else if (gameState.currentStage === 3) {
+                renderStage3(currentQ);
+            }
+        }
+
+        // --- عرض المرحلة 1 ---
+        function renderStage1(q) {
+            const ui = document.getElementById('stage1-ui');
+            ui.classList.remove('hidden');
+            ui.classList.add('flex');
+
+            document.getElementById('s1-category').textContent = q.cat;
+            document.getElementById('s1-item-text').innerHTML = q.text;
+            document.getElementById('s1-item-sub').textContent = q.sub;
+
+            const card = document.getElementById('s1-card');
+            card.className = 'w-full max-w-md bg-gradient-to-b from-slate-800 to-slate-900 border-2 border-slate-600 rounded-3xl p-8 text-center shadow-2xl transform transition-all duration-300';
+
+            document.getElementById('btn-choose-acid').disabled = false;
+            document.getElementById('btn-choose-base').disabled = false;
+
+            // تشغيل مؤقت 12 ثانية
+            document.getElementById('timer-container').classList.remove('hidden');
+            gameState.timeLeft = 12;
+            updateTimerUI();
+            gameState.timerInterval = setInterval(() => {
+                gameState.timeLeft -= 0.1;
+                if (gameState.timeLeft <= 0) {
+                    gameState.timeLeft = 0;
+                    clearInterval(gameState.timerInterval);
+                    handleStage1Answer('timeout');
+                }
+                updateTimerUI();
+            }, 100);
+        }
+
+        function updateTimerUI() {
+            const pct = (gameState.timeLeft / 12) * 100;
+            const bar = document.getElementById('timer-bar');
+            bar.style.width = `${pct}%`;
+            bar.className = `h-full transition-all duration-100 ${gameState.timeLeft < 4 ? 'bg-rose-500' : 'bg-amber-400'}`;
+            document.getElementById('timer-text').textContent = `${Math.ceil(gameState.timeLeft)}s`;
+        }
+
+        function handleStage1Answer(choice) {
+            if (gameState.answeredCurrent) return;
+            gameState.answeredCurrent = true;
+            clearInterval(gameState.timerInterval);
+
+            document.getElementById('btn-choose-acid').disabled = true;
+            document.getElementById('btn-choose-base').disabled = true;
+
+            const q = gameState.stageQuestions[gameState.currentIndex];
+            const isCorrect = (choice === q.type);
+            const card = document.getElementById('s1-card');
+
+            if (isCorrect) {
+                const speedBonus = Math.round(gameState.timeLeft * 5);
+                card.classList.add('border-emerald-500', 'animate-pop');
+                processResult(true, 100 + speedBonus, q.exp, `أحسنت! (+${100 + speedBonus} نقطة شاملة مكافأة السرعة ⚡)`);
+            } else {
+                card.classList.add('border-rose-500', 'animate-shake');
+                const msg = choice === 'timeout' ? 'انتهى الوقت! ⏰' : 'تصنيف غير صحيح!';
+                processResult(false, 0, q.exp, msg);
+            }
+        }
+
+        // --- عرض المرحلة 2 ---
+        function renderStage2(q) {
+            const ui = document.getElementById('stage2-ui');
+            ui.classList.remove('hidden');
+
+            document.getElementById('s2-topic').textContent = q.topic;
+            document.getElementById('s2-question').innerHTML = q.question;
+            document.getElementById('flask-liquid-path').setAttribute('fill', q.flaskColor);
+            document.getElementById('flask-caption').textContent = q.flaskLabel;
+
+            const eqBox = document.getElementById('s2-equation-box');
+            if (q.equation) {
+                eqBox.innerHTML = q.equation;
+                eqBox.classList.remove('hidden');
+            } else {
+                eqBox.classList.add('hidden');
+            }
+
+            // خلط الخيارات مع تتبع الإجابة الصحيحة
+            const mappedOptions = q.options.map((opt, idx) => ({ text: opt, isCorrect: idx === q.correct }));
+            const shuffledOptions = shuffleArray(mappedOptions);
+
+            const optionsContainer = document.getElementById('s2-options');
+            optionsContainer.innerHTML = '';
+
+            shuffledOptions.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-right p-4 rounded-2xl bg-slate-800/80 hover:bg-slate-700/90 border border-slate-600 text-slate-100 font-medium transition flex items-center justify-between gap-3';
+                btn.innerHTML = `<span>${opt.text}</span><span class="w-6 h-6 rounded-full border border-slate-500 flex items-center justify-center text-xs shrink-0">${['أ', 'ب', 'ج', 'د'][i]}</span>`;
+                btn.onclick = () => handleMultipleChoice(btn, opt.isCorrect, shuffledOptions, q.explanation, 's2-options');
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        // --- عرض المرحلة 3 ---
+        function renderStage3(q) {
+            const ui = document.getElementById('stage3-ui');
+            ui.classList.remove('hidden');
+
+            document.getElementById('s3-topic').textContent = q.topic;
+            document.getElementById('s3-question').innerHTML = q.question;
+
+            // إعادة المؤشر إلى المنتصف قبل الإجابة
+            const marker = document.getElementById('ph-marker');
+            marker.style.right = '50%';
+            marker.textContent = '?';
+
+            const mappedOptions = q.options.map((opt, idx) => ({ text: opt, isCorrect: idx === q.correct }));
+            const shuffledOptions = shuffleArray(mappedOptions);
+
+            const optionsContainer = document.getElementById('s3-options');
+            optionsContainer.innerHTML = '';
+
+            shuffledOptions.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-right p-4 rounded-2xl bg-slate-800/80 hover:bg-slate-700/90 border border-slate-600 text-slate-100 font-medium transition flex items-center justify-between gap-3';
+                btn.innerHTML = `<span>${opt.text}</span><span class="w-6 h-6 rounded-full border border-slate-500 flex items-center justify-center text-xs shrink-0">${['أ', 'ب', 'ج', 'د'][i]}</span>`;
+                btn.onclick = () => {
+                    // تحريك مؤشر مقياس pH إلى القيمة الحقيقية للسؤال
+                    const pct = Math.min(96, Math.max(4, (q.phValue / 14) * 100));
+                    marker.style.right = `calc(${pct}% - 10px)`;
+                    marker.textContent = q.phValue;
+                    handleMultipleChoice(btn, opt.isCorrect, shuffledOptions, q.explanation, 's3-options');
+                };
+                optionsContainer.appendChild(btn);
+            });
+        }
+
+        function handleMultipleChoice(clickedBtn, isCorrect, allOptions, explanation, containerId) {
+            if (gameState.answeredCurrent) return;
+            gameState.answeredCurrent = true;
+
+            const buttons = document.getElementById(containerId).querySelectorAll('button');
+            buttons.forEach((btn, idx) => {
+                btn.disabled = true;
+                if (allOptions[idx].isCorrect) {
+                    btn.classList.remove('bg-slate-800/80', 'border-slate-600');
+                    btn.classList.add('bg-emerald-600/30', 'border-emerald-400', 'text-emerald-200');
+                } else if (btn === clickedBtn && !isCorrect) {
+                    btn.classList.remove('bg-slate-800/80', 'border-slate-600');
+                    btn.classList.add('bg-rose-600/30', 'border-rose-400', 'text-rose-200', 'animate-shake');
+                } else {
+                    btn.classList.add('opacity-50');
+                }
+            });
+
+            const points = gameState.currentStage === 2 ? 150 : 200;
+            processResult(isCorrect, points, explanation, isCorrect ? `إجابة علمية دقيقة! (+${points} نقطة)` : 'إجابة غير صحيحة، راجع التفسير العلمي:');
+        }
+
+        // ----------------- 7. معالجة النتيجة والتغذية الراجعة -----------------
+        function processResult(isCorrect, basePoints, explanation, titleText) {
+            gameState.totalAnswered++;
+
+            if (isCorrect) {
+                gameState.totalCorrect++;
+                gameState.stageStats[gameState.currentStage].correct++;
+                gameState.streak++;
+                if (gameState.streak > gameState.maxStreak) gameState.maxStreak = gameState.streak;
+                
+                // مكافأة السلسلة المتتالية
+                const streakBonus = (gameState.streak > 1) ? (gameState.streak * 15) : 0;
+                gameState.score += (basePoints + streakBonus);
+                playSound('correct');
+            } else {
+                gameState.streak = 0;
+                playSound('wrong');
+            }
+
+            updateHUD();
+
+            // إظهار صندوق التغذية الراجعة
+            const fbBox = document.getElementById('feedback-box');
+            const fbIcon = document.getElementById('feedback-icon');
+            const fbTitle = document.getElementById('feedback-title');
+            const fbExp = document.getElementById('feedback-explanation');
+
+            fbBox.classList.remove('hidden', 'bg-emerald-950/70', 'border-emerald-500/50', 'text-emerald-100', 'bg-rose-950/70', 'border-rose-500/50', 'text-rose-100');
+            
+            if (isCorrect) {
+                fbBox.classList.add('bg-emerald-950/70', 'border-emerald-500/50', 'text-emerald-100');
+                fbIcon.textContent = '✅';
+            } else {
+                fbBox.classList.add('bg-rose-950/70', 'border-rose-500/50', 'text-rose-100');
+                fbIcon.textContent = '💡';
+            }
+
+            fbTitle.textContent = titleText;
+            fbExp.innerHTML = explanation;
+
+            // تحديث نص زر التالي في آخر سؤال
+            const nextBtn = document.getElementById('next-btn');
+            if (gameState.currentIndex + 1 >= gameState.stageQuestions.length) {
+                nextBtn.textContent = gameState.currentStage < 3 ? 'المرحلة التالية 🚀' : 'عرض النتيجة النهائية 🏆';
+            } else {
+                nextBtn.textContent = 'التالي ⬅️';
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score-display').textContent = gameState.score;
+            document.getElementById('streak-display').textContent = gameState.streak;
+        }
+
+        function nextQuestion() {
+            gameState.currentIndex++;
+            if (gameState.currentIndex < gameState.stageQuestions.length) {
+                renderQuestion();
+            } else {
+                // انتهت أسئلة المرحلة الحالية
+                if (gameState.currentStage < 3) {
+                    playSound('levelup');
+                    prepareStageTransition(gameState.currentStage + 1);
+                } else {
+                    playSound('levelup');
+                    showFinalResults();
+                }
+            }
+        }
+
+        // ----------------- 8. شاشة النتائج النهائية وتحليل الأداء -----------------
+        function showFinalResults() {
+            showScreen('screen-results');
+            document.getElementById('progress-bar').style.width = '100%';
+
+            const accuracy = Math.round((gameState.totalCorrect / gameState.totalAnswered) * 100) || 0;
+            
+            document.getElementById('result-player-greeting').textContent = `أحسنت يا ${gameState.playerName}!`;
+            document.getElementById('final-score').textContent = gameState.score;
+            document.getElementById('final-accuracy').textContent = `${accuracy}%`;
+            document.getElementById('final-correct').textContent = `${gameState.totalCorrect}/${gameState.totalAnswered}`;
+            document.getElementById('final-streak').textContent = gameState.maxStreak;
+
+            // تحديد اللقب العلمي بناءً على النسبة
+            const rankEl = document.getElementById('result-rank');
+            const trophyEl = document.getElementById('result-trophy');
+            if (accuracy >= 90) {
+                rankEl.textContent = 'عالم كيمياء متميز بدرجة امتياز 🌟';
+                trophyEl.textContent = '🏆';
+            } else if (accuracy >= 75) {
+                rankEl.textContent = 'باحث كيميائي متقدم 🔬';
+                trophyEl.textContent = '🥇';
+            } else if (accuracy >= 50) {
+                rankEl.textContent = 'كيميائي صاعد (أداء جيد) 🧪';
+                trophyEl.textContent = '🥈';
+            } else {
+                rankEl.textContent = 'متدرب في المختبر (تحتاج لمراجعة بسيطة) 📖';
+                trophyEl.textContent = '⚗️';
+            }
+
+            // بناء تقرير الأداء التفصيلي لكل محور
+            const breakdownContainer = document.getElementById('performance-breakdown');
+            breakdownContainer.innerHTML = '';
+
+            [1, 2, 3].forEach(stageNum => {
+                const stat = gameState.stageStats[stageNum];
+                const pct = Math.round((stat.correct / stat.total) * 100);
+                const barColor = pct >= 80 ? 'bg-emerald-500' : (pct >= 50 ? 'bg-amber-500' : 'bg-rose-500');
+
+                const row = document.createElement('div');
+                row.className = 'space-y-1';
+                row.innerHTML = `
+                    <div class="flex justify-between text-xs sm:text-sm">
+                        <span class="text-slate-300 font-medium">${stat.label}</span>
+                        <span class="font-bold ${pct >= 80 ? 'text-emerald-400' : (pct >= 50 ? 'text-amber-400' : 'text-rose-400')}">${stat.correct} من ${stat.total} (${pct}%)</span>
+                    </div>
+                    <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                        <div class="h-full ${barColor} transition-all duration-700" style="width: ${pct}%"></div>
+                    </div>
+                `;
+                breakdownContainer.appendChild(row);
+            });
+        }
+
+        // دعم لوحة المفاتيح للمرحلة الأولى (سهم يمين = حمض، سهم يسار = قاعدة)
+        document.addEventListener('keydown', (e) => {
+            if (gameState.currentStage === 1 && !document.getElementById('stage1-ui').classList.contains('hidden')) {
+                if (!gameState.answeredCurrent) {
+                    if (e.key === 'ArrowRight') handleStage1Answer('acid');
+                    if (e.key === 'ArrowLeft') handleStage1Answer('base');
+                } else if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    nextQuestion();
+                }
+            } else if (gameState.answeredCurrent && (e.key === 'Enter' || e.key === ' ')) {
+                if (!document.getElementById('screen-game').classList.contains('hidden')) {
+                    e.preventDefault();
+                    nextQuestion();
+                }
+            }
+        });
+
+        // تهيئة الخلفية عند تحميل الصفحة
+        window.onload = function() {
+            createBubbles();
+        };
+    </script>
+</body>
+</html>
